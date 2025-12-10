@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Image Inpainting for Cultural Heritage & Landmark Images</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --background: 222 47% 4%;
+      --foreground: 210 40% 92%;
+      --card: 222 47% 6%;
+      --card-foreground: 210 40% 92%;
+      --popover: 222 47% 6%;
+      --popover-foreground: 210 40% 92%;
+      --primary: 199 89% 60%;
+      --primary-foreground: 222 47% 4%;
+      --secondary: 217 33% 12%;
+      --secondary-foreground: 210 40% 92%;
+      --muted: 217 33% 15%;
+      --muted-foreground: 215 20% 55%;
+      --accent: 217 33% 17%;
+      --accent-foreground: 210 40% 92%;
+      --destructive: 0 84% 60%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 217 33% 18%;
+      --input: 217 33% 18%;
+      --ring: 199 89% 60%;
+      --radius: 0.75rem;
+
+      --glow-primary: 199 89% 60%;
+      --glow-success: 142 71% 45%;
+      --surface-elevated: 222 47% 8%;
+      --surface-glass: 222 47% 10%;
+      --text-soft: 215 20% 45%;
+
+      --gradient-radial: radial-gradient(
+        circle at top,
+        hsl(222 47% 8%) 0%,
+        hsl(var(--background)) 60%
+      );
+      --gradient-card: linear-gradient(
+        135deg,
+        hsl(217 33% 12%) 0%,
+        hsl(222 47% 4%) 100%
+      );
+      --gradient-glow: radial-gradient(
+        circle at top left,
+        hsl(199 89% 60% / 0.15),
+        transparent 50%
+      );
+    }
+
+    * ,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--gradient-radial);
+      color: hsl(var(--foreground));
+      font-family: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      min-height: 100vh;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background-color: hsla(199, 89%, 60%, 0.3);
+      color: hsl(var(--foreground));
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    p {
+      margin: 0 0 1rem;
+      line-height: 1.75;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    ul,
+    ol {
+      margin: 0 0 1rem 1.5rem;
+      padding: 0;
+      line-height: 1.75;
+    }
+
+    li {
+      margin-bottom: 0.35rem;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: "Libre Baskerville", "Times New Roman", serif;
+      letter-spacing: -0.01em;
+      margin: 0 0 0.75rem;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 2.5vw + 1.5rem, 2.75rem);
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    h4 {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    .page {
+      padding: 2rem 0 3rem;
+    }
+
+    /* Header / Navigation */
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(24px);
+      background: linear-gradient(
+        to bottom,
+        hsla(222, 47%, 4%, 0.95),
+        hsla(222, 47%, 4%, 0.85)
+      );
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .site-header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: hsl(var(--muted-foreground));
+      font-weight: 500;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: hsl(var(--primary));
+      box-shadow: 0 0 8px hsla(199, 89%, 60%, 0.6);
+      animation: pulse-glow 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .nav-links {
+      display: none;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .nav-link {
+      border-radius: 999px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.7rem;
+      border: 1px solid transparent;
+      color: hsl(var(--muted-foreground));
+      transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .nav-link:hover {
+      border-color: hsl(var(--border));
+      background: hsla(217, 33%, 12%, 0.6);
+      color: hsl(var(--foreground));
+    }
+
+    .nav-select-wrapper {
+      display: block;
+    }
+
+    .nav-select {
+      background: hsl(var(--secondary));
+      color: hsl(var(--muted-foreground));
+      border-radius: 0.5rem;
+      border: 1px solid hsl(var(--border));
+      padding: 0.35rem 0.75rem;
+      font-size: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+      .nav-links {
+        display: flex;
+      }
+      .nav-select-wrapper {
+        display: none;
+      }
+    }
+
+    /* Hero */
+
+    .hero {
+      padding: 2rem 0 3rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid hsl(var(--border));
+      background: hsla(217, 33%, 12%, 0.5);
+      font-size: 0.7rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: hsl(142, 71%, 45%);
+      box-shadow: 0 0 14px hsla(142, 71%, 45%, 0.5);
+      flex-shrink: 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 2.5rem;
+      margin-top: 2rem;
+      align-items: flex-start;
+    }
+
+    @media (min-width: 992px) {
+      .hero-grid {
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      }
+    }
+
+    .hero-lead {
+      color: hsl(var(--muted-foreground));
+      font-size: 1rem;
+      max-width: 36rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      box-shadow: 0 18px 32px -16px hsla(199, 89%, 60%, 0.5);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+
+    .btn-outline {
+      border-color: hsl(var(--border));
+      background: hsla(217, 33%, 12%, 0.5);
+      color: hsl(var(--muted-foreground));
+    }
+
+    .btn-outline:hover {
+      background: hsl(var(--secondary));
+      color: hsl(var(--foreground));
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .tag {
+      border-radius: 999px;
+      border: 1px solid hsl(var(--border));
+      padding: 0.4rem 0.75rem;
+      font-size: 0.7rem;
+      background: hsl(var(--card));
+      color: hsl(var(--muted-foreground));
+    }
+
+    .hero-side {
+      border-radius: 1rem;
+      border: 1px solid hsla(217, 33%, 18%, 0.7);
+      padding: 1.5rem;
+      background: linear-gradient(
+        135deg,
+        hsla(222, 47%, 10%, 0.85),
+        hsla(222, 47%, 4%, 0.95)
+      );
+      box-shadow:
+        0 25px 50px -12px hsla(222, 47%, 4%, 0.9),
+        0 0 0 1px hsla(217, 33%, 18%, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-side::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      background: radial-gradient(
+        circle at top left,
+        hsla(199, 89%, 60%, 0.25),
+        transparent 60%
+      );
+      opacity: 0.6;
+      z-index: -1;
+      filter: blur(12px);
+    }
+
+    .hero-side-title {
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.7rem;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 1.25rem;
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .step-number {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 999px;
+      border: 1px solid hsla(215, 20%, 55%, 0.5);
+      background: hsl(var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+      color: hsl(var(--muted-foreground));
+      flex-shrink: 0;
+    }
+
+    .pipeline-step p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.6;
+    }
+
+    .pipeline-step p span {
+      color: hsl(var(--foreground));
+      font-weight: 600;
+    }
+
+    .text-gradient {
+      background-image: linear-gradient(
+        135deg,
+        hsl(var(--primary)) 0%,
+        hsl(199 89% 70%) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Section cards */
+
+    .section-card {
+      margin-top: 2rem;
+      border-radius: 1rem;
+      border: 1px solid hsla(217, 33%, 18%, 0.9);
+      padding: 1.5rem 1.75rem;
+      background: linear-gradient(
+          135deg,
+          hsl(217 33% 12%) 0%,
+          hsl(222 47% 4%) 100%
+        );
+      backdrop-filter: blur(24px);
+    }
+
+    .section-card-alt {
+      background: linear-gradient(
+        135deg,
+        hsl(217 33% 15%) 0%,
+        hsl(222 47% 4%) 100%
+      );
+    }
+
+    .section-header {
+      margin-bottom: 1rem;
+    }
+
+    .section-header h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: hsl(var(--muted-foreground));
+      max-width: 40rem;
+    }
+
+    /* Flowchart styles */
+
+    .flow-pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .flow-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: -4rem;
+    }
+    .flow-col-restored {
+      margin-top: 2.2rem;  /* tweak 0.8–1.4rem to taste */
+    }
+    .flow-pill {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.6rem;
+      border: 1px solid hsla(217, 33%, 18%, 0.9);
+      background: hsl(var(--card));
+      font-size: 0.8rem;
+      text-align: center;
+      color: hsl(var(--muted-foreground));
+      min-width: 140px;
+    }
+
+    .flow-pill.highlight {
+      background: hsla(199, 89%, 60%, 0.12);
+      border-color: hsla(199, 89%, 60%, 0.7);
+      color: hsl(var(--foreground));
+      font-weight: 500;
+    }
+
+    .flow-sublabel {
+      display: block;
+      margin-top: 0.2rem;
+      font-size: 0.7rem;
+      color: hsla(215, 20%, 55%, 0.85);
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .flow-arrow {
+      font-size: 1rem;
+      color: hsla(199, 89%, 60%, 0.7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flow-arrow-down {
+      display: flex;
+      justify-content: center;
+      margin: 0.25rem 0;
+    }
+
+    .flow-vertical-card {
+      border-radius: 0.75rem;
+      border: 1px solid hsla(217, 33%, 18%, 0.7);
+      background: hsla(222, 47%, 6%, 0.9);
+      padding: 1rem;
+    }
+
+    .flow-vertical-card h4 {
+      text-align: center;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .flow-vertical {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    /* Extra helpers for pipeline + LaMa/uFFC diagrams */
+
+    .flow-comparative-row {
+      display: flex;
+      justify-content: flex-end;   /* position under right side of pipeline */
+      margin-top: 0.85rem;
+    }
+
+    .flow-comparative-inner {
+      display: flex;
+      flex-direction: column;      /* arrow above box */
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .flow-arrow-down-inline {
+      font-size: 1rem;
+      color: hsla(199, 89%, 60%, 0.7);
+    }
+
+    .flow-pill-impl {
+      background: hsla(199, 89%, 60%, 0.16);
+      border-color: hsla(199, 89%, 60%, 0.9);
+      color: hsl(var(--foreground));
+      font-weight: 500;
+    }
+
+    /* LaMa FFC layout (like presentation figure) */
+    .lama-ffc-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .lama-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .lama-row-branches {
+      margin-top: 0.15rem;
+    }
+
+    /* Baseline vs modified branch at bottom */
+    .lama-bottom-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+  
+    .global-card-grid {
+      display: grid;
+      gap: 1.25rem;
+      align-items: flex-start;
+    }
+
+    @media (min-width: 900px) {
+      .global-card-grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr);
+      }
+    }
+
+    .branch-card {
+      min-width: 0;
+    }
+
+    .branch-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 0.35rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .flow-vertical-grid {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .flow-vertical-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .flow-pill-base {
+      /* base (unmodified) steps */
+      color: hsl(var(--muted-foreground));
+    }
+
+    .flow-pill-impl {
+      /* steps we explicitly implement/modify */
+      background: hsla(199, 89%, 60%, 0.16);
+      border-color: hsla(199, 89%, 60%, 0.9);
+      color: hsl(var(--foreground));
+      font-weight: 500;
+    }
+
+    .lama-flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .lama-branches {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .global-branches {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .global-branches {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .branch-card {
+      min-width: 0; /* allow shrinking in grid */
+    } 
+
+    /* Implementation grid */
+
+    .impl-grid {
+      display: grid;
+      gap: 1.75rem;
+      align-items: flex-start;
+      margin-top: 1.5rem;
+    }
+
+    @media (min-width: 992px) {
+      .impl-grid {
+        grid-template-columns: minmax(0, 1fr) 280px;
+      }
+    }
+
+    /* LaMa FFC architecture subfigure (3-column mini-grid) */
+
+    .lama-ffc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      justify-items: center;
+      row-gap: 0.35rem;
+      column-gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .lama-full {
+      grid-column: 1 / 4; /* span all 3 columns */
+      width: 100%;
+    }
+
+    .lama-arrow {
+      font-size: 0.8rem;
+      color: hsla(199, 89%, 60%, 0.8);
+    }
+
+    .lama-plus {
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 999px;
+      border: 1px solid hsla(199, 89%, 60%, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: hsla(199, 89%, 60%, 0.9);
+    }
+
+    /* Metrics table */
+
+    .table-wrapper {
+      margin-top: 1rem;
+      overflow-x: auto;
+    }
+
+    .metrics-table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .metrics-table thead tr {
+      background: hsla(217, 33%, 12%, 0.7);
+    }
+
+    .metrics-table th,
+    .metrics-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid hsla(217, 33%, 18%, 0.9);
+      text-align: left;
+    }
+
+    .metrics-table th {
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .metrics-table td {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .metrics-table td.metric-highlight {
+      color: hsl(var(--primary));
+      font-weight: 500;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+        Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .metrics-table-row-highlight {
+      background: hsla(199, 89%, 60%, 0.05);
+    }
+
+    .table-caption {
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+    }
+    /* Quantitative grouped bar chart */
+
+    .bar-chart-wrapper {
+      margin-top: 1.5rem;
+    }
+
+    .bar-chart-title {
+      font-size: 0.85rem;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.4rem;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 1.5rem;
+      padding: 0.75rem 0.6rem 0.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid hsla(217, 33%, 18%, 0.9);
+      background: hsla(217, 33%, 12%, 0.7);
+    }
+
+    .metric-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+
+    .bar-pair {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.3rem;
+      height: 120px; /* chart height */
+    }
+
+    .bar {
+      width: 0.8rem;
+      border-radius: 999px 999px 0 0;
+      background: hsla(217, 33%, 30%, 0.9);
+    }
+
+    .bar--lama {
+      background: hsla(217, 33%, 35%, 0.9);
+    }
+
+    .bar--uffc {
+      background: hsla(199, 89%, 60%, 0.9);
+    }
+
+    .metric-name {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .bar-legend {
+      margin-top: 0.6rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.9rem;
+      font-size: 0.7rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .bar-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .bar-legend-swatch {
+      width: 0.9rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: hsla(217, 33%, 35%, 0.9);
+    }
+
+    .bar-legend-swatch--uffc {
+      background: hsla(199, 89%, 60%, 0.9);
+    }
+
+    /* Gallery */
+
+    .gallery-intro {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .image-row {
+      margin-top: 1.75rem;
+    }
+
+    .image-row-header {
+      margin-bottom: 0.5rem;
+    }
+
+    .image-row-header p {
+      margin-bottom: 0;
+      font-size: 0.9rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+      .image-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    .image-grid-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .image-placeholder {
+      border-radius: 0.75rem;
+      border: 1px dashed hsla(217, 33%, 30%, 0.8);
+      background: hsla(199, 89%, 60%, 0.05);
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem;
+    }
+
+    .image-placeholder p {
+      font-size: 0.7rem;
+      color: hsla(215, 20%, 55%, 0.85);
+      margin: 0;
+      text-align: center;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .image-caption {
+      font-size: 0.7rem;
+      text-align: center;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Footer */
+
+    .site-footer {
+      border-top: 1px solid hsl(var(--border));
+      margin-top: 3rem;
+      padding: 1.75rem 0;
+      text-align: center;
+    }
+
+    .site-footer p {
+      margin: 0.15rem 0;
+      color: hsl(var(--muted-foreground));
+      font-size: 0.8rem;
+    }
+
+    .site-footer p:last-child {
+      font-size: 0.7rem;
+      color: hsla(215, 20%, 55%, 0.85);
+    }
+
+    /* Simple animation utilities (optional) */
+
+    .animate-fade-in {
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    .animate-fade-in-up {
+      opacity: 0;
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-slide-in-right {
+      opacity: 0;
+      animation: slideInRight 0.5s ease-out forwards;
+    }
+
+    .animation-delay-100 {
+      animation-delay: 0.1s;
+    }
+
+    .animation-delay-200 {
+      animation-delay: 0.2s;
+    }
+
+    .animation-delay-300 {
+      animation-delay: 0.3s;
+    }
+
+    .animation-delay-400 {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes pulse-glow {
+      0%,
+      100% {
+        box-shadow: 0 0 8px hsl(var(--glow-primary) / 0.6);
+      }
+      50% {
+        box-shadow: 0 0 20px hsl(var(--glow-primary) / 0.9);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <header class="site-header">
+    <div class="container site-header-inner">
+      <a href="#top" class="logo">
+        <span class="logo-dot"></span>
+        <span>CS 566 • Inpainting</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#motivation" class="nav-link">Motivation</a>
+        <a href="#related" class="nav-link">Related Work</a>
+        <a href="#approach" class="nav-link">Approach</a>
+        <a href="#implementation" class="nav-link">Implementation</a>
+        <a href="#results" class="nav-link">Results</a>
+        <a href="#conclusion" class="nav-link">Conclusion</a>
+        <a href="#future" class="nav-link">Future Work</a>
+      </nav>
+
+      <div class="nav-select-wrapper">
+        <select id="nav-select" class="nav-select">
+          <option value="">Navigate...</option>
+          <option value="#motivation">Motivation</option>
+          <option value="#related">Related Work</option>
+          <option value="#approach">Approach</option>
+          <option value="#implementation">Implementation</option>
+          <option value="#results">Results</option>
+          <option value="#conclusion">Conclusion</option>
+          <option value="#future">Future Work</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="page container" id="top">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="animate-fade-in">
+      </div>
+
+      <div class="hero-grid">
+        <div class="animate-fade-in-up">
+          <h1>
+            Image Inpainting for
+            <span class="text-gradient"
+              >Cultural Heritage &amp; Landmark Images</span
+            >
+          </h1>
+
+          <div class="hero-actions">
+            <a href="#results" class="btn btn-primary">View Results</a>
+            <a href="#approach" class="btn btn-outline">Jump to Approach</a>
+          </div>
+
+          <div class="hero-tags">
+            <span class="tag"
+              >Team: Aayush Gupta &amp; Akanksha Chaudhari</span
+            >
+          </div>
+        </div>
+
+        <aside class="hero-side animate-slide-in-right animation-delay-200">
+          <h3 class="hero-side-title">High-level Pipeline</h3>
+
+          <div>
+            <div class="pipeline-step animate-fade-in-up animation-delay-100">
+              <span class="step-number">1</span>
+              <p>
+                <span>Input</span>:
+                Landmark image + binary mask (damage or occlusion)
+              </p>
+            </div>
+
+            <div class="pipeline-step animate-fade-in-up animation-delay-200">
+              <span class="step-number">2</span>
+              <p>
+                <span>Segmentation</span>:
+                Mask2Former-based masks select people/trees to remove
+              </p>
+            </div>
+
+            <div class="pipeline-step animate-fade-in-up animation-delay-300">
+              <span class="step-number">3</span>
+              <p>
+                <span>Inpainting</span>:
+                LaMa with mean-preserving global FFC branch (uFFC-style)
+              </p>
+            </div>
+
+            <div class="pipeline-step animate-fade-in-up animation-delay-400">
+              <span class="step-number">4</span>
+              <p>
+                <span>Output</span>:
+                Restored image with clutter removed and regions filled
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Motivation -->
+    <section
+      id="motivation"
+      class="section-card section-card-alt"
+    >
+      <header class="section-header">
+        <h2>Motivation</h2>
+        <p class="section-subtitle">
+        </p>
+      </header>
+
+      <div>
+        <p>
+         Historical photos and images of cultural heritage sites are almost never perfect. 
+         The physical medium ages, film degrades, and we get cracks, stains, faded areas, 
+         or even torn and missing parts. On top of that, the scene itself can be cluttered: 
+         people, trees, or scaffolding often block important architectural or textual details.
+         Historians and conservators use these images to read inscriptions, study architecture, 
+         and sometimes reconstruct 3D models of sites. Damage and occlusions make all of this 
+         harder: lines are broken, text is missing, and key regions cannot be seen. Manual 
+         digital restoration is possible, but it is slow, subjective, and does not scale to 
+         large archives.
+        </p>
+        <p>
+          From computer vision perspective, this can be viewed as missing data problem where
+          some pixels in the image are either corrupted or belong to objects we would like to 
+          remove. The underlying scene is still there conceptually, but we only observe part 
+          of it. Image inpainting addresses exactly this setting: given an image and a mask 
+          that marks the “unknown” pixels, we try to fill in those regions so that edges, 
+          textures, and colors match the rest of the image so that the resulting image looks 
+          globally coherent.
+        </p>
+        <p>
+          In this project, we model historical image restoration as an inpainting problem.
+          Formally, given an RGB image <span> I </span> and a binary mask
+          <span> M </span> that marks damaged regions or unwanted foreground objects,
+          we learn a model <span> f </span> that produces a completed image
+          <span> I' </span> defined as:
+        </p>
+
+        <p style="text-align:center;">
+          <span> I' = f(I, M) </span>
+        </p>
+
+        <p>
+          Inside the mask, <span> I' </span> should blend naturally with the unmasked
+          content, using both local cues (nearby gradients and textures) and global
+          structure (perspective, building layout, and overall color). 
+        </p>
+      </div>
+    </section>
+
+    <!-- Related Work -->
+    <section
+      id="related"
+      class="section-card section-card-alt"
+    >
+      <header class="section-header">
+        <h2>Related Work</h2>
+        <p class="section-subtitle">
+        </p>
+      </header>
+
+      <div>
+        <p>
+          A substantial amount of research has been published in the context of image inpaintingImage inpainting methods are often grouped into three broad categories: 
+        </p>
+        <ul>
+        <li>  
+          <strong>Diffusion-based Methods:</strong> Diffusion and PDE methods extend ideas from image smoothing and edge continuation. They propagate 
+          intensities and gradients from the hole boundary inward. These work well for thin scratches and 
+          small gaps but rely on local smoothness, so they break down when the missing region is large 
+          or contains complex structure (such as faces, text etc).
+        </li>
+        <li>
+          <strong>Exemplar-based Methods:</strong> These methods focus on texture. Instead of diffusing values, they copy patches from 
+          known regions into the hole, guided by edge strength and patch similarity. This can produce 
+          convincing fills for stochastic textures like grass or brick, as long as similar patterns exist 
+          elsewhere in the image. However, they still operate within a single image and have trouble when 
+          the missing content is unique or when global geometry (e.g., window grids, perspective lines) 
+          needs to be preserved.
+        </li>
+        <li>
+        <strong>Learning-based Methods:</strong> Deep learning methods treat inpainting as conditional image generation. Encoder-decoder CNNs with 
+          reconstruction and adversarial losses learn to hallucinate missing content that is semantically 
+          plausible. Variants with partial or gated convolutions improve handling of irregular masks by 
+          learning where to trust input pixels. These models capture higher-level structure but, with standard 
+          spatial convolutions, still have limited effective receptive fields, which makes very large, 
+          free-form masks and high-resolution scenes challenging. More recent work targets this global context 
+          problem directly. LaMa introduces Fast Fourier Convolutions (FFC), combining a local branch for 
+          fine detail with a global branch in the Fourier domain that sees the whole image early on. 
+          Follow-up work such as Unbiased FFC refines the frequency-domain processing to reduce color drift 
+          and other artifacts. 
+        </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Approach -->
+    <section id="approach" class="section-card">
+      <header class="section-header">
+        <h2>Approach</h2>
+        <p class="section-subtitle">
+        </p>
+      </header>
+
+      <div>
+        <p>
+          Building on the learning-based methods surveyed above, we instantiate our restoration
+          problem using LaMa as the core inpainting model. LaMa is specifically designed for 
+          large, irregular masks and high-resolution images, combining a local convolutional 
+          branch for fine detail with a global Fourier branch (FFC) that captures image-wide 
+          context. This makes it a good fit for landmark scenes, where we need to respect both 
+          local texture (brick, stone, ornamentation) and global architectural structure.
+        </p>
+
+        <p>
+          At the same time, prior work on Unbiased FFC (UFFC) points out that naive frequency
+          processing can introduce biases in low-frequency components, leading to color drift 
+          and other global artifacts. In this project, we treat LaMa as a strong baseline and 
+          explicitly ask: <em>if we replace its original global branch with a UFFC-style design,
+          do we obtain more stable color and structure on landmark, heritage-style images?</em>
+        </p>
+        <!-- Pipeline Flowchart -->
+        <div>
+          <div class="flow-pipeline" style="margin-top: 1.25rem;">
+            <div class="flow-pill highlight">
+              Preparing the Dataset
+            </div>
+
+            <span class="flow-arrow">&rarr;</span>
+
+            <div class="flow-pill highlight">
+              Binary Mask Generation
+            </div>
+
+            <span class="flow-arrow">&rarr;</span>
+
+            <div class="flow-col">
+              <div class="flow-pill">
+                Model 1: Baseline LaMa
+                <span class="flow-sublabel">I' = f₁(I, M)</span>
+              </div>
+              <div class="flow-pill highlight">
+                Model 2: LaMa + uFFC
+                <span class="flow-sublabel">I' = f₂(I, M)</span>
+              </div>
+            </div>
+
+            <span class="flow-arrow">&rarr;</span>
+
+            <div class="flow-col flow-col-restored">
+              <div class="flow-pill">
+                Restored Image (Model 1)
+                <span class="flow-sublabel">I′₁ = f₁(I, M)</span>
+              </div>
+              <div class="flow-pill highlight">
+                Restored Image (Model 2)
+                <span class="flow-sublabel">I′₂ = f₂(I, M)</span>
+              </div>
+
+              <span class="flow-arrow">&darr;</span>
+              <div class="flow-pill highlight">
+                Comparative Evaluation
+              </div>
+              <br>
+            </div>
+          </div>
+          
+        <p>
+          To answer this, we build a compact end-to-end pipeline around LaMa and compare two
+          models under identical data and masks:
+        </p>
+        <ul>
+          <li>
+            A <strong>mask generation module</strong> that produces both synthetic 
+            “damage-like” masks and segmentation-based occlusion masks from semantic labels,
+            simulating cracks, missing regions, and the removal of people and vegetation.
+          </li>
+          <li>
+            A <strong>baseline LaMa inpainting model</strong> fine-tuned on the masked 
+            landmark dataset, which serves as our reference system for large-mask completion
+            in this domain.
+          </li>
+          <li>
+            A <strong>modified LaMa variant</strong> where we refine the global Fourier
+            branch to use an Unbiased FFC. Finally, we use a shared evaluation pipelineto qualitatively and quantitatively
+            compare both models on the same test set.
+          </li>
+        </ul>
+
+      </div>
+    </section>
+
+    <!-- Implementation -->
+    <section
+      id="implementation"
+      class="section-card section-card-alt"
+    >
+      <header class="section-header">
+        <h2>Implementation</h2>
+        <p class="section-subtitle">
+        </p>
+      </header>
+          <p>
+            We implement the pipeline on top of the public LaMa codebase. We add a
+            simple dataset loader for our Kaggle landmark subset and a mask module that, for
+            each image, can produce either (i) a random mask using LaMa's inbuilt toolchain
+            to mimic strokes/blobs/scratches or (ii) a segmentation-based occlusion mask using a
+            Mask2Former ADE20K checkpoint to select people and trees, followed by
+            simple post-processing. 
+          </p>
+          <p>  
+            On the model side, we keep LaMa's generator and loss setup and finetune
+            two variants from the same pretrained checkpoint on the masked landmark
+            data: (i) a baseline <strong>Model&nbsp;1</strong> that uses the original
+            LaMa global branch unchanged, and (ii) a <strong>Model&nbsp;2</strong>
+            that differs only in the global <code>FourierUnit</code>, which we replace
+            with our version.
+          </p>
+      <div>
+
+
+        <!-- Global branch variants: baseline vs modified -->
+        <div style="margin-top: 1.75rem;">
+          <!-- single card: left = text, right = two subfigures -->
+          <div class="flow-vertical-card" style="margin-top: 0.75rem;">
+            <div class="global-card-grid">
+              <!-- Text column -->
+              <div>
+                <h4 style="margin-bottom:0.5rem;font-size:0.9rem;">
+                  What changes in the modified branch?
+                </h4>
+                <br>
+                <ul>
+                  <li>
+                    We leave the local (spatial) branch untouched and modify only the global
+                    <code>FourierUnit</code>.
+                  </li>
+                  <li>
+                    Before FFT we subtract the spatial mean; after IFFT we add it back, so the
+                    global branch operates on deviations rather than shifting overall brightness
+                    and color.
+                  </li>
+                  <li>
+                    In the frequency domain we treat real/imag parts as channels, concatenate a
+                    learnable <code>locMap</code>, and apply a small conv stack
+                    (<code>1x1</code> + dilated <code>3x3</code> with
+                    <code>fftshift/ifftshift</code>).
+                  </li>
+                  <li>
+                    A scalar gate blends the original and processed spectra, and we lightly
+                    clip the inverse-FFT output around the input range before returning the
+                    global output <em>Y<sub>g</sub></em>.
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Subfigure column: baseline + modified branches -->
+              <div class="global-branches">
+                <!-- (a) Baseline global branch -->
+                <div class="branch-card">
+                  <div class="branch-title">
+                    (a) Baseline global branch (LaMa)
+                  </div>
+                  <div class="flow-vertical">
+                    <div class="flow-pill flow-pill-base">
+                      Global branch FFC input
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-base">
+                      FFT to frequency domain
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-base">
+                      Frequency convolution
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-base">
+                      IFFT to spatial domain
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-base">
+                      Global output Y<sub>g</sub>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- (b) Modified global branch -->
+                <div class="branch-card">
+                  <div class="branch-title">
+                    (b) Modified global branch (uFFC)
+                  </div>
+                  <div class="flow-vertical">
+                    <div class="flow-pill flow-pill-base">
+                      Global branch FFC input
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-base">
+                      FFT to freq domain
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-impl">
+                      Add locMap + freq conv.
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-impl">
+                      Gate orig. and proc. spectrum
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-base">
+                      IFFT to spatial domain
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-impl">
+                      Mean correction, clipping
+                    </div>
+                    <span class="flow-arrow">&darr;</span>
+
+                    <div class="flow-pill flow-pill-base">
+                      Global output Y<sub>g</sub>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="section-card">
+      <header class="section-header">
+        <h2>Results</h2>
+      </header>
+      <p>
+        We evaluate both fine-tuned models (Model&nbsp;1: baseline LaMa, 
+        Model&nbsp;2: LaMa+UFFC) on the same landmark test split and the same set 
+        of masks.
+        A shared evaluation script runs both fine-tuned models on this test set,
+        computes all metrics, and exports visual comparisons under identical conditions.
+        Both results of qualitative as well as quantitative evaluation of the two models 
+        are presented below:
+      </p>
+
+      <div>
+        <div style="margin-bottom: 1.5rem;">
+          <h3>1. Qualitative Analysis</h3>
+        <div>
+          <!-- Example 1 -->
+          <div class="image-row">
+            <div class="image-row-header">
+              <h4>Example 1 — Removing People from Façade</h4>
+              <p>
+                The segmentation mask isolates people in the foreground. The
+                refined model fills in the brick and stone textures behind them
+                with consistent color and structure.
+              </p>
+            </div>
+
+            <div class="image-grid">
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>Original Image</p>
+                </div>
+                <div class="image-caption">Input</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>Binary Mask</p>
+                </div>
+                <div class="image-caption">Mask</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>LaMa Result</p>
+                </div>
+                <div class="image-caption">Baseline</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>LaMa + uFFC</p>
+                </div>
+                <div class="image-caption">Refined</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Example 2 -->
+          <div class="image-row">
+            <div class="image-row-header">
+              <h4>Example 2 — Random Damage Restoration</h4>
+              <p>
+                Stroke-shaped random masks emulate scratches and missing patches.
+                The model reconstructs the façade with minimal seams and reduced
+                color artifacts compared to the baseline.
+              </p>
+            </div>
+
+            <div class="image-grid">
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>Original Image</p>
+                </div>
+                <div class="image-caption">Input</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>Damage Mask</p>
+                </div>
+                <div class="image-caption">Mask</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>LaMa Result</p>
+                </div>
+                <div class="image-caption">Baseline</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>LaMa + uFFC</p>
+                </div>
+                <div class="image-caption">Refined</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Example 3 -->
+          <div class="image-row">
+            <div class="image-row-header">
+              <h4>Example 3 — Large Mask Challenge (Failure Mode)</h4>
+              <p>
+                When the mask covers a large portion of distinct geometry, the
+                model still produces a plausible building, but fine alignment and
+                details are not faithful to the original. This illustrates the
+                limits of the learned prior.
+              </p>
+            </div>
+
+            <div class="image-grid">
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>Original Image</p>
+                </div>
+                <div class="image-caption">Input</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>Large Mask</p>
+                </div>
+                <div class="image-caption">Mask</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>LaMa Result</p>
+                </div>
+                <div class="image-caption">Baseline</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <p>LaMa + uFFC</p>
+                </div>
+                <div class="image-caption">Refined</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <h3>Quantitative Metrics</h3>
+        <p>
+          We quantitatively evaluate both models using PSNR and SSIM (higher is better) and LPIPS and FID
+          (lower is better). PSNR and SSIM measure how well the inpainted regions match the
+          ground truth at the pixel and structural level, while LPIPS and FID capture
+          perceptual similarity and distribution-level realism.
+        </p>
+
+        <p>
+          The table below summarizes the results. The refined LaMa+uFFC model achieves a
+          large gain in PSNR (21.84 → 32.77) and a clear improvement in SSIM (0.72 → 0.81),
+          indicating more accurate and structurally consistent reconstructions in the masked
+          regions. LPIPS and FID also decrease slightly (0.408 → 0.398, 37.54 → 35.54),
+          suggesting modest but consistent improvements in perceptual quality and how
+          “dataset-like” the inpainted images appear overall.
+        </p>
+          <div class="table-wrapper">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>PSNR &uarr;</th>
+                  <th>SSIM &uarr;</th>
+                  <th>LPIPS &darr;</th>
+                  <th>FID &darr;</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Base Model (LaMa)</td>
+                  <td>21.84</td>
+                  <td>0.7218</td>
+                  <td>0.4079</td>
+                  <td>37.54</td>
+                </tr>
+                <tr class="metrics-table-row-highlight">
+                  <td>Refined Model (LaMa + uFFC)</td>
+                  <td class="metric-highlight">32.77</td>
+                  <td class="metric-highlight">0.8112</td>
+                  <td class="metric-highlight">0.3982</td>
+                  <td class="metric-highlight">35.54</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="table-caption">
+            </p>
+            <div class="bar-chart-wrapper">
+              <div class="bar-chart-title">
+                Normalized metric comparison (each metric scaled independently; higher bar = larger numeric value).
+              </div>
+
+              <div class="bar-chart">
+                <!-- PSNR -->
+                <div class="metric-group">
+                  <div class="bar-pair">
+                    <!-- LaMa: 21.84 / 32.77 ≈ 67% -->
+                    <div class="bar bar--lama" style="height: 67%;"></div>
+                    <!-- LaMa+uFFC: 32.77 / 32.77 = 100% -->
+                    <div class="bar bar--uffc" style="height: 100%;"></div>
+                  </div>
+                  <div class="metric-name">PSNR</div>
+                </div>
+
+                <!-- SSIM -->
+                <div class="metric-group">
+                  <div class="bar-pair">
+                    <!-- 0.7218 / 0.8112 ≈ 89% -->
+                    <div class="bar bar--lama" style="height: 89%;"></div>
+                    <!-- 0.8112 / 0.8112 = 100% -->
+                    <div class="bar bar--uffc" style="height: 100%;"></div>
+                  </div>
+                  <div class="metric-name">SSIM</div>
+                </div>
+
+                <!-- LPIPS (lower is better; chart shows raw values) -->
+                <div class="metric-group">
+                  <div class="bar-pair">
+                    <!-- 0.4079 is max -->
+                    <div class="bar bar--lama" style="height: 100%;"></div>
+                    <!-- 0.3982 / 0.4079 ≈ 98% -->
+                    <div class="bar bar--uffc" style="height: 98%;"></div>
+                  </div>
+                  <div class="metric-name">LPIPS</div>
+                </div>
+
+                <!-- FID (lower is better; chart shows raw values) -->
+                <div class="metric-group">
+                  <div class="bar-pair">
+                    <!-- 37.54 is max -->
+                    <div class="bar bar--lama" style="height: 100%;"></div>
+                    <!-- 35.54 / 37.54 ≈ 95% -->
+                    <div class="bar bar--uffc" style="height: 95%;"></div>
+                  </div>
+                  <div class="metric-name">FID</div>
+                </div>
+              </div>
+
+              <div class="bar-legend">
+                <div class="bar-legend-item">
+                  <span class="bar-legend-swatch"></span>
+                  <span>LaMa</span>
+                </div>
+                <div class="bar-legend-item">
+                  <span class="bar-legend-swatch bar-legend-swatch--uffc"></span>
+                  <span>LaMa + uFFC</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Conclusion -->
+    <section id="conclusion" class="section-card">
+      <header class="section-header">
+        <h2>Conclusion</h2>
+      </header>
+        <div>
+          <p>
+            In this project, we framed historical-style landmark restoration as an
+            inpainting problem and built an end-to-end pipeline around LaMa. On the
+            vision side, we saw that domain-aware masks matter as much as the model:
+            random “damage-like” masks test generic capabilities, but segmentation-based
+            masks are essential to realistically simulate removing people and vegetation
+            from landmark scenes. On the modeling side, starting from LaMa’s local–global
+            architecture and upgrading the global branch to a UFFC-style design led to
+            clear quantitative gains (notably in PSNR and SSIM) and visibly more stable
+            color and structure in many inpainted regions.
+          </p>
+
+          <p>
+            We also encountered several engineering challenges that shaped the final
+            system. Integrating a large research codebase (LaMa) with a heavy segmentation
+            model (Mask2Former) required careful environment management and code reading
+            to identify the relevant paths. Getting reasonable occlusion masks on landmark
+            images was non-trivial: the initial Detectron2-based approach underperformed,
+            which pushed us toward an ADE-style semantic segmentation pipeline and
+            better mask selection. 
+          </p>
+        </div>
+    </section>
+
+    <!-- Future Work -->
+    <section id="future" class="section-card">
+      <header class="section-header">
+        <h2>Future Work</h2>
+      </header>
+
+    <p>
+      Potential next steps to improve the inpainting results we get from our restoration pipelein include - geometry-aware
+      inpainting with edge/line maps and depth cues, fine-tuning on real historical photos
+      and scanned documents, and exploring transformer-based inpainting with global
+      self-attention. In terms of usability, a lightweight user interface that wraps the
+      pipeline and lets historians/experts load images, edit masks, and inspect multiple completion
+      candidates could be added.
+    </p>
+
+    </section>
+
+    <!-- Links -->
+    <section id="links" class="section-card">
+      <header class="section-header">
+        <h2>Links</h2>
+      </header>
+      <ul>
+        <li>
+          Link to presentation:
+          Link to code:
+        </li>
+      </ul>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      var select = document.getElementById("nav-select");
+      if (select) {
+        select.addEventListener("change", function (e) {
+          var value = e.target.value;
+          if (value) {
+            window.location.hash = value;
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
