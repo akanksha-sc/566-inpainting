@@ -1157,12 +1157,12 @@
          large archives.
         </p>
         <p>
-          From computer vision perspective, this can be viewed as missing data problem where
+          From a computer vision perspective, this can be viewed as missing data problem where
           some pixels in the image are either corrupted or belong to objects we would like to 
           remove. The underlying scene is still there conceptually, but we only observe part 
           of it. Image inpainting addresses exactly this setting: given an image and a mask 
-          that marks the “unknown” pixels, we try to fill in those regions so that edges, 
-          textures, and colors match the rest of the image so that the resulting image looks 
+          that marks the "unknown" pixels, we try to fill in those regions so that edges, 
+          textures, and colors match the rest of the image, making it look 
           globally coherent.
         </p>
         <p>
@@ -1205,7 +1205,7 @@
           <strong>Diffusion-based Methods:</strong> Diffusion and PDE methods extend ideas from image smoothing and edge continuation. They propagate 
           intensities and gradients from the hole boundary inward. These work well for thin scratches and 
           small gaps but rely on local smoothness, so they break down when the missing region is large 
-          or contains complex structure (such as faces, text etc).
+          or contains complex structure (such as faces, text, etc).
         </li>
         <li>
           <strong>Exemplar-based Methods:</strong> These methods focus on texture. Instead of diffusing values, they copy patches from 
@@ -1250,10 +1250,10 @@
         </p>
 
         <p>
-          At the same time, prior work on Unbiased FFC (UFFC) points out that naive frequency
+          At the same time, prior work on Unbiased FFC (uFFC) points out that naive frequency
           processing can introduce biases in low-frequency components, leading to color drift 
           and other global artifacts. In this project, we treat LaMa as a strong baseline and 
-          explicitly ask: <em>if we replace its original global branch with a UFFC-style design,
+          explicitly ask: <em>if we modify its original global branch to use unbiased FFC,
           do we obtain more stable color and structure on landmark, heritage-style images?</em>
         </p>
         <!-- Pipeline Flowchart -->
@@ -1428,7 +1428,7 @@
                 <!-- (b) Modified global branch -->
                 <div class="branch-card">
                   <div class="branch-title">
-                    (b) Modified global branch (uFFC)
+                    (b) Modified global branch (Unbiased FFC)
                   </div>
                   <div class="flow-vertical">
                     <div class="flow-pill flow-pill-base">
@@ -1479,7 +1479,7 @@
       </header>
       <p>
         We evaluate both fine-tuned models (Model&nbsp;1: baseline LaMa, 
-        Model&nbsp;2: LaMa+UFFC) on the same landmark test split and the same set 
+        Model&nbsp;2: LaMa+uFFC) on the same landmark test split and the same set 
         of masks.
         A shared evaluation script runs both fine-tuned models on this test set,
         computes all metrics, and exports visual comparisons under identical conditions.
@@ -1772,7 +1772,7 @@
             random "damage-like" masks worked well to test generic capabilities, but segmentation-based
             masks are essential to realistically simulate removing people and vegetation
             from landmark scenes. On the modeling side, starting from LaMa's local–global
-            architecture and upgrading the global branch to a UFFC-style design led to
+            architecture and upgrading the global branch to use unbiased FFCs led to
             clear quantitative gains (notably in PSNR and SSIM) and subtly more stable
             color and structure in inpainted regions.
           </p>
