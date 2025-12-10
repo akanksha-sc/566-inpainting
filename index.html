@@ -1198,7 +1198,7 @@
 
       <div>
         <p>
-          A substantial amount of research has been published in the context of image inpaintingImage inpainting methods are often grouped into three broad categories: 
+          A substantial amount of research has been published in the context of image inpainting and the methods presented in these are often grouped into three broad categories: 
         </p>
         <ul>
         <li>  
@@ -1309,7 +1309,7 @@
         <ul>
           <li>
             A <strong>mask generation module</strong> that produces both synthetic 
-            “damage-like” masks and segmentation-based occlusion masks from semantic labels,
+            "damage-like" masks and segmentation-based occlusion masks from semantic labels,
             simulating cracks, missing regions, and the removal of people and vegetation.
           </li>
           <li>
@@ -1319,7 +1319,7 @@
           </li>
           <li>
             A <strong>modified LaMa variant</strong> where we refine the global Fourier
-            branch to use an Unbiased FFC. Finally, we use a shared evaluation pipelineto qualitatively and quantitatively
+            branch to use an Unbiased FFC. Finally, we use a shared evaluation pipeline to qualitatively and quantitatively
             compare both models on the same test set.
           </li>
         </ul>
@@ -1767,14 +1767,14 @@
         <div>
           <p>
             In this project, we framed historical-style landmark restoration as an
-            inpainting problem and built an end-to-end pipeline around LaMa. On the
-            vision side, we saw that domain-aware masks matter as much as the model:
-            random “damage-like” masks test generic capabilities, but segmentation-based
+            inpainting problem and built an end-to-end pipeline around LaMa. In our experience, 
+            the domain-aware masks matter as much as the model:
+            random "damage-like" masks worked well to test generic capabilities, but segmentation-based
             masks are essential to realistically simulate removing people and vegetation
-            from landmark scenes. On the modeling side, starting from LaMa’s local–global
+            from landmark scenes. On the modeling side, starting from LaMa's local–global
             architecture and upgrading the global branch to a UFFC-style design led to
-            clear quantitative gains (notably in PSNR and SSIM) and visibly more stable
-            color and structure in many inpainted regions.
+            clear quantitative gains (notably in PSNR and SSIM) and subtly more stable
+            color and structure in inpainted regions.
           </p>
 
           <p>
@@ -1782,7 +1782,7 @@
             system. Integrating a large research codebase (LaMa) with a heavy segmentation
             model (Mask2Former) required careful environment management and code reading
             to identify the relevant paths. Getting reasonable occlusion masks on landmark
-            images was non-trivial: the initial Detectron2-based approach underperformed,
+            images was non-trivial. The initial Detectron2-based approach did not work well,
             which pushed us toward an ADE-style semantic segmentation pipeline and
             better mask selection. 
           </p>
@@ -1796,10 +1796,10 @@
       </header>
 
     <p>
-      Potential next steps to improve the inpainting results we get from our restoration pipelein include - geometry-aware
+      Potential next steps to improve the inpainting results we get from our restoration pipeline include - geometry-aware
       inpainting with edge/line maps and depth cues, fine-tuning on real historical photos
       and scanned documents, and exploring transformer-based inpainting with global
-      self-attention. In terms of usability, a lightweight user interface that wraps the
+      self-attention to see if we get substantially better results. In terms of usability, a lightweight user interface that wraps the
       pipeline and lets historians/experts load images, edit masks, and inspect multiple completion
       candidates could be added.
     </p>
