@@ -1049,6 +1049,8 @@
         <a href="#results" class="nav-link">Results</a>
         <a href="#conclusion" class="nav-link">Conclusion</a>
         <a href="#future" class="nav-link">Future Work</a>
+        <a href="#links" class="nav-link">Links</a>
+        <a href="#references" class="nav-link">References</a>
       </nav>
 
       <div class="nav-select-wrapper">
@@ -1061,6 +1063,8 @@
           <option value="#results">Results</option>
           <option value="#conclusion">Conclusion</option>
           <option value="#future">Future Work</option>
+          <option value="#links">Links</option>
+          <option value="#references">References</option>          
         </select>
       </div>
     </div>
@@ -1338,24 +1342,29 @@
         </p>
       </header>
           <p>
+            We use the <a href="https://www.kaggle.com/datasets/kayvanshah/landmarks-dataset" target="_blank" style="text-decoration: underline;">Kaggle Landmarks dataset</a> as our source of landmark images. The dataset has 6 categories with 5 landmarks per category and 14 images per landmark, for a total of 420 images at 1080p resolution. For our experiments, we resize all images to 256×256 due to GPU memory constraints and split them into training, validation, and test sets.
+          </p>
+          <p>
             We implement the pipeline on top of the public LaMa codebase. We add a
             simple dataset loader for our Kaggle landmark subset and a mask module that, for
-            each image, can produce either (i) a random mask using LaMa's inbuilt toolchain
-            to mimic strokes/blobs/scratches or (ii) a segmentation-based occlusion mask using a
-            Mask2Former ADE20K checkpoint to select people and trees, followed by
-            simple post-processing. 
+            each image, can produce either (i) a random mask using LaMa’s built-in
+            stroke/blob generator to mimic scratches and missing patches, or (ii)
+            segmentation-based masks using Facebook’s
+            <code>mask2former-swin-base-ade-semantic</code> model to obtain ADE-style
+            semantic labels and derive occlusion masks for foreground classes such as
+            people and vegetation.
           </p>
           <p>  
-            On the model side, we keep LaMa's generator and loss setup and finetune
-            two variants from the same pretrained checkpoint on the masked landmark
-            data: (i) a baseline <strong>Model&nbsp;1</strong> that uses the original
-            LaMa global branch unchanged, and (ii) a <strong>Model&nbsp;2</strong>
-            that differs only in the global <code>FourierUnit</code>, which we replace
-            with our version.
+            On the model side, we keep LaMa’s generator and loss setup and fine-tune
+            two variants from the same pretrained checkpoint on the resized (256×256)
+            masked landmark data: (i) a baseline <strong>Model&nbsp;1</strong> that
+            uses the original LaMa global branch unchanged, and (ii) a
+            <strong>Model&nbsp;2</strong> that differs only in the global
+            <code>FourierUnit</code>, which we replace with our UFFC-style version.
+            We reuse LaMa’s default training hyperparameters and run fine-tuning on
+            two NVIDIA RTX 2080 Ti GPUs (11&nbsp;GB VRAM each).
           </p>
       <div>
-
-
         <!-- Global branch variants: baseline vs modified -->
         <div style="margin-top: 1.75rem;">
           <!-- single card: left = text, right = two subfigures -->
@@ -1483,8 +1492,7 @@
         of masks.
         A shared evaluation script runs both fine-tuned models on this test set,
         computes all metrics, and exports visual comparisons under identical conditions.
-        Both results of qualitative as well as quantitative evaluation of the two models 
-        are presented below:
+        Both the qualitative and quantitative results for the two models are presented below:
       </p>
 
       <div>
@@ -1765,7 +1773,7 @@
         <h3>Quantitative Metrics</h3>
         <p>
           We quantitatively evaluate both models using PSNR and SSIM (higher is better) and LPIPS and FID
-          (lower is better). PSNR and SSIM measure how well the inpainted regions match the
+          (lower is better). PSNR and SSIM measure how well the reconstructed images match the
           ground truth at the pixel and structural level, while LPIPS and FID capture
           perceptual similarity and distribution-level realism.
         </p>
@@ -1776,7 +1784,7 @@
           indicating more accurate and structurally consistent reconstructions in the masked
           regions. LPIPS and FID also decrease slightly (0.408 → 0.398, 37.54 → 35.54),
           suggesting modest but consistent improvements in perceptual quality and how
-          “dataset-like” the inpainted images appear overall.
+          "dataset-like" the inpainted images appear overall.
         </p>
           <div class="table-wrapper">
             <table class="metrics-table">
