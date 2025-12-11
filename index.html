@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Image Inpainting for Cultural Heritage & Landmark Images</title>
+  <title>Image Inpainting for Cultural Heritage & Landmark Image Restoration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1793,13 +1793,15 @@
             We also observe that for smaller masks, the baseline and refined models achieve similar results with subtle differences. To more concretely demonstrate the comparison, we next present the 
             results of our quantitative evaluation.
           </p>
+          <br>
         </div>
         <h3>Quantitative Metrics</h3>
         <p>
           We quantitatively evaluate both models using PSNR and SSIM (higher is better) and LPIPS and FID
           (lower is better). PSNR and SSIM measure how well the reconstructed images match the
           ground truth at the pixel and structural level, while LPIPS and FID capture
-          perceptual similarity and distribution-level realism.
+          perceptual similarity and distribution-level realism. In our setup, this ground truth is a transformer-
+          generated restoration used as a proxy for an ideal undamaged image.
         </p>
 
         <p>
@@ -1925,13 +1927,12 @@
             clear quantitative gains (notably in PSNR and SSIM) and subtly more stable
             color and structure in inpainted regions.
           </p>
-
           <p>
             We also encountered several engineering challenges that shaped the final
             system. Integrating a large research codebase (LaMa) with a heavy segmentation
             model (Mask2Former) required careful environment management and code reading
             to identify the relevant paths. Getting reasonable occlusion masks on landmark
-            images was non-trivial. The initial Detectron2-based approach did not work well,
+            images was non-trivial. The initial Detectron2-based approach using LaMa's in-built segmentation mask generator did not work well,
             which pushed us toward an ADE-style semantic segmentation pipeline and
             better mask selection. 
           </p>
@@ -1946,9 +1947,9 @@
 
     <p>
       Potential next steps to improve the inpainting results we get from our restoration pipeline include - geometry-aware
-      inpainting with edge/line maps and depth cues, fine-tuning on real historical photos
+      inpainting with edge/line maps and depth cues which could help guide inpainting in large mask challenges, fine-tuning on real historical photos
       and scanned documents, and exploring transformer-based inpainting with global
-      self-attention to see if we get substantially better results. In terms of usability, a lightweight user interface that wraps the
+      self-attention to see how we compare. In terms of usability, a lightweight user interface that wraps the
       pipeline and lets historians/experts load images, edit masks, and inspect multiple completion
       candidates could be added.
     </p>
