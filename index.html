@@ -1502,16 +1502,18 @@
           <div class="image-row">
             <div class="image-row-header">
               <h4>Task 1 — Removing People from Foreground</h4>
-              <p>
+                <p>
                 In the following examples, the segmentation mask isolates people in the foreground and the
                 models fill in the textures behind them with consistent color and structure.
                 In the first example, the baseline seems to add more noise instead of performing the removal task
-                to reveal the structural and architectural details in the background; whereas the refined model seems to
-                do a noticeably better job matching the global color tone and consistency of the picture. In the second 
-                example, both models seems to be able to perform the people removal task well with refined model giving us 
-                very subtle improvements in preserving structure. We demonstrate these benefits more clearly using quantitative 
-                evaluation presented in the next section
+                to reveal the structural and architectural details in the background, whereas the refined model
+                does a noticeably better job matching the global color tone and consistency of the picture while revealing relevant details in background.
+                In the second example, both models seem to be able to perform the people removal task well,
+                with the refined model giving us very subtle improvements in preserving structure.
+                We demonstrate these benefits more clearly using the quantitative 
+                evaluation presented in the next section.
               </p>
+
             </div>
 
             <div class="image-grid">
@@ -1598,10 +1600,12 @@
             <div class="image-row-header">
               <h4>Task 2 — Random Damage Restoration</h4>
               <p>
-                In the following example, we generate random masks emulating large strokes, stains and missing patches.
-                These are intentionally larger and thicker to bring out differences in how both the models perform coarser
-                grained inpainting. Here, we observe that refine model seems to perform slightly better with reduced color artifacts than baseline
-                for the mask at the bottom and the mask at the right edge of the image which spans multiple textures (bushes, grass, wall).
+                In the following example, we generate random masks emulating large strokes, stains, and missing patches.
+                These are intentionally larger and thicker to bring out differences in how both models perform coarser-
+                grained inpainting which is the focus of the uFFC modification we make. 
+                Here, we observe that the refined model seems to perform slightly better with reduced
+                color artifacts than the baseline, especially for the mask at the bottom and the mask at the right edge of
+                the image which spans multiple textures (bushes, grass, wall).
               </p>
             </div>
 
@@ -1651,17 +1655,18 @@
               <h4>Task 3 — Large Mask Challenge</h4>
               <p>
                 Here, we test how the models perform when the mask covers a large portion of distinct geometry.
-                In the first example, the mask marks the pyramids to be removed, since the mask covers such a large 
-                portion of the image, both models seem to struggle with this task introducing color artifacts and minor
+                In the first example, the mask marks the pyramids to be removed. Since the mask covers such a large 
+                portion of the image, both models seem to struggle with this task, introducing color artifacts and minor
                 texture discrepancies. In the second example, the mask marks the background covered in fog to be restored.
-                Here, we observe that our refined model performs noticeably better than the baseline model reconstructing a plausible background for the image
-                and successfully mitigates the undesirable atmospheric light scattering effect in the region marked by the mask as it
-                is able to use wider global context to infer the right pattern, texture, and colors for adding buildings and nightsky in the
-                background. In the third example, the mask marks two big buildings in the foreground to be removed to reveal the rest of the skyline.
-                Here, we see both models struggle to recontstruct a plausible image due to the many complex, but similar textures and structures present in the image. 
-                However, the refined model gets much closer to attaining the final goal by partial removal of foreground objects; 
-                however, the baseline variant seems to extend the building in regions it did not previously occupy, altering regions beyond the ones marked
-                by the mask further obstructing our skyline study.
+                Here, we observe that our refined model performs noticeably better than the baseline, reconstructing a plausible
+                background for the image and successfully mitigating the atmospheric light-scattering effect in the region marked
+                by the mask, as it is able to use wider global context to infer the right pattern, texture, and colors for adding
+                buildings and night sky in the background. In the third example, the mask marks two big buildings in the foreground
+                to be removed to reveal the rest of the skyline. Here, we see both models struggle to reconstruct a plausible image
+                due to the many complex but similar textures and structures present in the image. However, the refined model gets
+                much closer to attaining the final goal by partial removal of foreground objects, whereas the baseline variant seems
+                to extend the building in regions it did not previously occupy, altering regions beyond the ones marked by the mask
+                and further obstructing our skyline study.
               </p>
             </div>
 
@@ -1783,9 +1788,9 @@
             </div>
           </div>
           <p>
-            The above three tasks demonstrate that in large mask cases where there is still enough detail and structure in the unmasked regions, the modified refined model shows 
-            subtle yet visible improvements over baseline. However, it still struggles in cases where the mask covers a large part of the image hiding majority of the global context.
-            We also observe that for smaller masks, the baseline and refined model achieve similar results with subtle differences. So, to further concretely demonstrate the comparison we next present the 
+            The above three tasks demonstrate that in large-mask cases where there is still enough detail and structure in the unmasked regions, the refined model shows 
+            visible improvements over the baseline. However, it still struggles in cases where the mask covers a large part of the image, hiding the majority of the global context.
+            We also observe that for smaller masks, the baseline and refined models achieve similar results with subtle differences. To more concretely demonstrate the comparison, we next present the 
             results of our quantitative evaluation.
           </p>
         </div>
