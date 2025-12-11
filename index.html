@@ -1497,7 +1497,7 @@
               <h4>Example 1 — Removing People from Façade</h4>
               <p>
                 The segmentation mask isolates people in the foreground. The
-                refined model fills in the brick and stone textures behind them
+                refined model fills in the textures behind them
                 with consistent color and structure.
               </p>
             </div>
@@ -1534,6 +1534,45 @@
                 <div class="image-placeholder">
                   <img
                     src="images/NotreDameDeParis7_mask012.png"
+                    alt="LaMa + uFFC inpainting result"
+                  />
+                </div>
+                <div class="image-caption">Refined</div>
+              </div>
+            </div>
+
+            <div class="image-grid">
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/JamaMasjid-9.png"
+                    alt="Original façade with people in front"
+                  />
+                </div>
+                <div class="image-caption">Input</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/JamaMasjid-9_mask012.png"
+                    alt="Binary mask marking people to remove"
+                  />
+                </div>
+                <div class="image-caption">Mask</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/JamaMasjid-9_mask012_old.png"
+                    alt="Baseline LaMa inpainting result"
+                  />
+                </div>
+                <div class="image-caption">Baseline</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/JamaMasjid-9_mask012_new.png"
                     alt="LaMa + uFFC inpainting result"
                   />
                 </div>
@@ -1584,7 +1623,7 @@
               <div class="image-grid-item">
                 <div class="image-placeholder">
                   <img
-                    src="images/image12.png"
+                    src="images/image13.png"
                     alt="LaMa + uFFC inpainting result"
                   />
                 </div>
@@ -1596,7 +1635,7 @@
           <!-- Example 3 -->
           <div class="image-row">
             <div class="image-row-header">
-              <h4>Example 3 — Large Mask Challenge (Failure Mode)</h4>
+              <h4>Example 3 — Large Mask Challenge</h4>
               <p>
                 When the mask covers a large portion of distinct geometry, the
                 model still produces a plausible building, but fine alignment and
@@ -1637,6 +1676,84 @@
                 <div class="image-placeholder">
                   <img
                     src="images/PyramidofDjoser-1_mask068_new.png"
+                    alt="LaMa + uFFC inpainting result"
+                  />
+                </div>
+                <div class="image-caption">Refined</div>
+              </div>
+            </div>
+
+            <div class="image-grid">
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/CCTVHeadquarters-2.png"
+                    alt="Original façade with people in front"
+                  />
+                </div>
+                <div class="image-caption">Input</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/CCTVHeadquarters-2_mask002-1.png"
+                    alt="Binary mask marking people to remove"
+                  />
+                </div>
+                <div class="image-caption">Mask</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/CCTVHeadquarters-2_mask001.png"
+                    alt="Baseline LaMa inpainting result"
+                  />
+                </div>
+                <div class="image-caption">Baseline</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/CCTVHeadquarters-2_mask002.png"
+                    alt="LaMa + uFFC inpainting result"
+                  />
+                </div>
+                <div class="image-caption">Refined</div>
+              </div>
+            </div>
+
+            <div class="image-grid">
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/ChryslerBuilding-3.png"
+                    alt="Original façade with people in front"
+                  />
+                </div>
+                <div class="image-caption">Input</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/ChryslerBuilding-3_mask048.png"
+                    alt="Binary mask marking people to remove"
+                  />
+                </div>
+                <div class="image-caption">Mask</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/ChryslerBuilding-3_mask002.png"
+                    alt="Baseline LaMa inpainting result"
+                  />
+                </div>
+                <div class="image-caption">Baseline</div>
+              </div>
+              <div class="image-grid-item">
+                <div class="image-placeholder">
+                  <img
+                    src="images/ChryslerBuilding-3_mask048_new.png"
                     alt="LaMa + uFFC inpainting result"
                   />
                 </div>
