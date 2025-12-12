@@ -1666,7 +1666,9 @@
                 due to the many complex but similar textures and structures present in the image. However, the refined model gets
                 much closer to attaining the final goal by partial removal of foreground objects, whereas the baseline variant seems
                 to extend the building in regions it did not previously occupy, altering regions beyond the ones marked by the mask
-                and further obstructing our skyline study.
+                and further obstructing our skyline study. We observe this behavior because LaMa slightly dilates the mask during its 
+                refinement step to blend the new content with surrounding pixels, so regions just outside the original mask can be 
+                modified—and in this example that blending behaves poorly, pushing artifacts into unmasked areas.
               </p>
             </div>
 
